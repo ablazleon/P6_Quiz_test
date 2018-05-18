@@ -182,6 +182,7 @@ exports.randomplay = (req, res, next) => {
 
             // 3) Se pasa el quiz al formulario
                 .then(function (quizzes) {
+                    console.log(quizzes[0])
                     res.render('quizzes/random_play', { //Index random cehck tal
                         quiz: quizzes[0],
                         score: req.session.randomPlay.lenght
