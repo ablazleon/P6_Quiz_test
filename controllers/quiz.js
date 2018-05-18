@@ -153,3 +153,75 @@ exports.check = (req, res, next) => {
         answer
     });
 };
+
+/*
+* randomplay muestra una pregunta al azar en el formulario del view random_play
+*
+* Para ello:
+*
+* 1) Se crea un array con las ids preguntas de la BBDD.
+* 2) Se consulta la BBDD y se saca los ids de las que faltan por contestar.
+* 3) Se pasa el quiz al formulario
+*
+ */
+// GET /quizzes/randomplay
+exports.randomplay = (req, res, next) => {
+
+    // 1) Se crea un array con las ids preguntas de la BBDD.
+    req.session.randomPlay = req.session.randomPlay || [];
+
+// 2) Se consulta la BBDD y se saca los ids de las que faltan por contestar.
+    const whereOpt = {'id': {[Sequelize.Op.notIn]: req.session.randomPlay}};
+    models.quiz.count({where: whereOpt})
+        .then(function (count) {
+            return models.quiz.findAll({
+                where: whereOpt,
+                offset: Math.floor(Math.random() * count),
+                limit: 1
+            })
+
+            // 3) Se pasa el quiz al formulario
+                .then(function (quizzes) {
+                    res.render('quizzes/random_play', { //Index random cehck tal
+                        quiz: quizzes[0],
+                        score: req.session.randomPlay.lenght
+                    })
+                    // .catch(error => {
+                    //     next(error);
+                    // });
+                });
+        });
+};
+
+
+/*
+* randomcheck muestra si la respuesta es correcta en el formulario.
+*
+* 1) Comprueba si la respuesta que obtiene de la BBDD guardada en req.query
+* es la misma de la que aparece en el formulario.
+* 2) Si es correcto se sigue jugando hasta que se acaben las preguntas.
+* 3) Si es incorrecto se muestra el view random_nomore
+*
+*/
+// GET /quizzes/:quizId/randomcheck
+ exports.randomcheck = (req, res, next) => {
+
+     // 1) Comprueba si la respuesta que obtiene de la BBDD guardada en req.query
+     // es la misma de la que aparece en el formulario.
+     const answer = req.query.answer || "";
+     const result  = answer.toLowerCase().trim() === req.quiz.answer;
+
+     if (result){
+         req.session.randomPlay.push(req.quiz.id);
+     }
+     //else{
+     //  delete req.session.randomPlay;
+     //}
+
+     const score = req.session.randomPlay.length;
+     res.render('quizzes/random_result', {answer, result, score});
+
+     if (!result){
+         delete req.session.randomPlay;
+     }
+ };
