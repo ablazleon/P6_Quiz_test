@@ -10,6 +10,7 @@ const Sequelize = require('sequelize');
 //    DATABASE_URL = postgres://user:passwd@host:port/database
 
 const url = process.env.DATABASE_URL || "sqlite:quiz.sqlite";
+//quizzes.sqlite
 
 const sequelize = new Sequelize(url);
 
